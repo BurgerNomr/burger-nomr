@@ -1,21 +1,19 @@
 import { useRoute, Link } from "wouter";
-import { useGetRestaurant, useGetRestaurantReviews } from "@workspace/api-client-react";
-import { ArrowLeft, MapPin, Star, PenSquare } from "lucide-react";
+import { useGetRestaurant, useGetRestaurantNoms } from "@workspace/api-client-react";
+import { ArrowLeft, MapPin, PenSquare } from "lucide-react";
 import { NomScore, NomBadge } from "@/components/NomScore";
 import { useAuth } from "@/lib/auth";
 
-function ReviewItem({ review }: { review: {
+interface Nom {
   id: string;
   user_name: string;
-  overall_rating: number;
-  patty_rating: number;
-  bun_rating: number;
-  sauce_rating: number;
-  value_rating: number;
+  score: number;
   comment?: string | null;
   created_at: string;
-}}) {
-  const date = new Date(review.created_at).toLocaleDateString("en-ZA", {
+}
+
+function NomItem({ nom }: { nom: Nom }) {
+  const date = new Date(nom.created_at).toLocaleDateString("en-ZA", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -32,21 +30,15 @@ function ReviewItem({ review }: { review: {
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
         <div>
-          <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#1A1208" }}>{review.user_name}</div>
+          <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#1A1208" }}>{nom.user_name}</div>
           <div style={{ fontSize: "0.75rem", color: "#7A6A58", marginTop: 2 }}>{date}</div>
         </div>
-        <NomBadge rating={review.overall_rating} size="sm" />
+        <NomBadge score={nom.score} size="sm" />
       </div>
-      <NomScore
-        patty_rating={review.patty_rating}
-        bun_rating={review.bun_rating}
-        sauce_rating={review.sauce_rating}
-        value_rating={review.value_rating}
-      />
-      {review.comment && (
+      {nom.comment && (
         <p
           style={{
-            marginTop: 10,
+            marginTop: 0,
             marginBottom: 0,
             fontSize: "0.88rem",
             color: "#1A1208",
@@ -54,7 +46,7 @@ function ReviewItem({ review }: { review: {
             fontStyle: "italic",
           }}
         >
-          "{review.comment}"
+          "{nom.comment}"
         </p>
       )}
     </div>
@@ -69,9 +61,11 @@ export default function RestaurantDetailPage() {
   const { data: restaurant, isLoading } = useGetRestaurant(id, {
     query: { enabled: !!id, queryKey: ["getRestaurant", id] },
   });
-  const { data: reviews } = useGetRestaurantReviews(id, {
-    query: { enabled: !!id, queryKey: ["getRestaurantReviews", id] },
+  const { data: noms } = useGetRestaurantNoms(id, {
+    query: { enabled: !!id, queryKey: ["getRestaurantNoms", id] },
   });
+
+  const kashifNom = noms?.find((n) => n.user_name === "Kashif");
 
   if (isLoading) {
     return (
@@ -238,7 +232,82 @@ export default function RestaurantDetailPage() {
           </p>
         )}
 
-        {/* NOM+ Score */}
+        {/* Kashif's featured nom */}
+        {kashifNom && (
+          <div
+            style={{
+              background: "#1A1208",
+              borderRadius: 16,
+              padding: "18px 20px",
+              marginBottom: 16,
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: -20,
+                right: -20,
+                width: 120,
+                height: 120,
+                background: "radial-gradient(circle, rgba(232,66,10,0.35) 0%, transparent 70%)",
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.65rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.1em",
+                    color: "#E8420A",
+                    marginBottom: 4,
+                  }}
+                >
+                  KASHIF'S TAKE
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--app-font-display)",
+                    fontSize: "1rem",
+                    color: "white",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  Kashif
+                </div>
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--app-font-display)",
+                  fontSize: "3rem",
+                  color: "#E8420A",
+                  letterSpacing: "0.04em",
+                  lineHeight: 1,
+                }}
+              >
+                {kashifNom.score.toFixed(1)}
+                <span style={{ fontSize: "1rem", color: "#7A6A58" }}>/10</span>
+              </div>
+            </div>
+            {kashifNom.comment && (
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "0.88rem",
+                  color: "#D4C8BC",
+                  lineHeight: 1.5,
+                  fontStyle: "italic",
+                }}
+              >
+                "{kashifNom.comment}"
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Overall Nom Score */}
         <div
           style={{
             background: "#FFF9F2",
@@ -258,32 +327,15 @@ export default function RestaurantDetailPage() {
           >
             <div>
               <h3 style={{ fontFamily: "var(--app-font-display)", fontSize: "1.2rem", margin: 0, letterSpacing: "0.04em" }}>
-                NOM+ SCORE
+                NOM SCORE
               </h3>
               <div style={{ fontSize: "0.75rem", color: "#7A6A58", marginTop: 2 }}>
-                Based on {restaurant.total_reviews} review{restaurant.total_reviews !== 1 ? "s" : ""}
+                Based on {restaurant.total_noms} nom{restaurant.total_noms !== 1 ? "s" : ""}
               </div>
             </div>
-            <NomBadge rating={restaurant.avg_rating} size="lg" />
+            <NomBadge score={restaurant.avg_score} size="lg" />
           </div>
-
-          {reviews && reviews.length > 0 ? (() => {
-            const avg = (field: keyof typeof reviews[0]) =>
-              reviews.reduce((sum, r) => sum + (r[field] as number), 0) / reviews.length;
-            return (
-              <NomScore
-                patty_rating={avg("patty_rating")}
-                bun_rating={avg("bun_rating")}
-                sauce_rating={avg("sauce_rating")}
-                value_rating={avg("value_rating")}
-                size="lg"
-              />
-            );
-          })() : (
-            <p style={{ color: "#7A6A58", fontSize: "0.85rem", textAlign: "center", margin: "8px 0" }}>
-              No ratings yet. Be the first to Nom this spot!
-            </p>
-          )}
+          <NomScore score={restaurant.avg_score} size="lg" />
         </div>
 
         {/* CTA */}
@@ -309,7 +361,7 @@ export default function RestaurantDetailPage() {
               }}
             >
               <PenSquare size={18} />
-              WRITE A NOM+ REVIEW
+              DROP YOUR NOM
             </button>
           </Link>
         ) : (
@@ -323,7 +375,7 @@ export default function RestaurantDetailPage() {
             }}
           >
             <p style={{ margin: "0 0 10px", color: "#7A6A58", fontSize: "0.85rem" }}>
-              Sign in to leave a Nom+ review
+              Sign in to drop a nom
             </p>
             <Link href="/">
               <button
@@ -344,7 +396,7 @@ export default function RestaurantDetailPage() {
           </div>
         )}
 
-        {/* Reviews */}
+        {/* Noms list */}
         <div style={{ marginBottom: 24 }}>
           <h2
             style={{
@@ -354,9 +406,9 @@ export default function RestaurantDetailPage() {
               letterSpacing: "0.04em",
             }}
           >
-            REVIEWS ({reviews?.length ?? 0})
+            NOMS ({noms?.length ?? 0})
           </h2>
-          {reviews && reviews.length === 0 && (
+          {noms && noms.length === 0 && (
             <div
               style={{
                 textAlign: "center",
@@ -366,15 +418,14 @@ export default function RestaurantDetailPage() {
                 border: "1px solid #E8DDD0",
               }}
             >
-              <Star size={32} color="#D4C8BC" style={{ marginBottom: 12 }} />
               <p style={{ color: "#7A6A58", fontSize: "0.9rem", margin: 0 }}>
-                No reviews yet. Be the first Nomr!
+                No noms yet. Be the first Nomr!
               </p>
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {reviews?.map((review) => (
-              <ReviewItem key={review.id} review={review} />
+            {noms?.map((nom) => (
+              <NomItem key={nom.id} nom={nom} />
             ))}
           </div>
         </div>

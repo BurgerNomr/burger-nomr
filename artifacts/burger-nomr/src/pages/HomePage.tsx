@@ -104,7 +104,7 @@ export default function HomePage() {
           <div style={{ display: "flex", gap: 16 }}>
             {[
               { label: "Spots", value: stats.total_restaurants },
-              { label: "Reviews", value: stats.total_reviews },
+              { label: "Noms", value: stats.total_noms },
               { label: "Top Area", value: stats.top_area ?? "—" },
             ].map(({ label, value }) => (
               <div key={label}>
@@ -137,7 +137,7 @@ export default function HomePage() {
               <Flame size={20} />
               <div>
                 <div style={{ fontFamily: "var(--app-font-display)", fontSize: "1.1rem", letterSpacing: "0.04em" }}>TOP 10</div>
-                <div style={{ fontSize: "0.72rem", opacity: 0.8 }}>Best rated spots</div>
+                <div style={{ fontSize: "0.72rem", opacity: 0.8 }}>Best nominated spots</div>
               </div>
             </div>
           </Link>
@@ -196,7 +196,6 @@ export default function HomePage() {
                   height: 220,
                   background: "#F0E8DC",
                   borderRadius: 16,
-                  animation: "pulse 1.5s ease-in-out infinite",
                 }}
               />
             ))}
@@ -214,8 +213,8 @@ export default function HomePage() {
                 name={r.name}
                 area={r.area}
                 image_url={r.image_url}
-                avg_rating={r.avg_rating}
-                total_reviews={r.total_reviews}
+                avg_score={r.avg_score}
+                total_noms={r.total_noms}
                 tags={r.tags}
                 price_range={r.price_range}
               />

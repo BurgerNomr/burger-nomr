@@ -9,10 +9,10 @@ router.get("/stats/summary", async (_req, res): Promise<void> => {
     .select({ total: count() })
     .from(restaurantsTable);
 
-  const [reviewStats] = await db
+  const [nomStats] = await db
     .select({
       total: count(),
-      avg_rating: avg(reviewsTable.overall_rating),
+      avg_score: avg(reviewsTable.score),
     })
     .from(reviewsTable);
 
@@ -24,8 +24,8 @@ router.get("/stats/summary", async (_req, res): Promise<void> => {
 
   res.json({
     total_restaurants: Number(restaurantStats?.total ?? 0),
-    total_reviews: Number(reviewStats?.total ?? 0),
-    avg_rating_platform: reviewStats?.avg_rating ? Number(reviewStats.avg_rating) : null,
+    total_noms: Number(nomStats?.total ?? 0),
+    avg_score_platform: nomStats?.avg_score ? Number(nomStats.avg_score) : null,
     top_area: topAreaRow?.area ?? null,
   });
 });

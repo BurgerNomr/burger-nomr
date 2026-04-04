@@ -8,11 +8,7 @@ export const reviewsTable = pgTable("reviews", {
   user_id: text("user_id").notNull(),
   user_name: text("user_name").notNull(),
   user_avatar: text("user_avatar"),
-  overall_rating: numeric("overall_rating", { precision: 3, scale: 1 }).notNull(),
-  patty_rating: numeric("patty_rating", { precision: 3, scale: 1 }).notNull(),
-  bun_rating: numeric("bun_rating", { precision: 3, scale: 1 }).notNull(),
-  sauce_rating: numeric("sauce_rating", { precision: 3, scale: 1 }).notNull(),
-  value_rating: numeric("value_rating", { precision: 3, scale: 1 }).notNull(),
+  score: numeric("score", { precision: 4, scale: 1 }).notNull(),
   comment: text("comment"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

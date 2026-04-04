@@ -1,12 +1,6 @@
 import { useGetTopRestaurants } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Trophy, Star, MapPin } from "lucide-react";
-
-const RANK_STYLES: Record<number, { bg: string; text: string; border: string }> = {
-  1: { bg: "#E8420A", text: "white", border: "#C73508" },
-  2: { bg: "#7A6A58", text: "white", border: "#6A5A48" },
-  3: { bg: "#D4C8BC", text: "#1A1208", border: "#C4B8AC" },
-};
+import { Flame, MapPin } from "lucide-react";
 
 export default function Top10Page() {
   const { data: restaurants, isLoading } = useGetTopRestaurants();
@@ -33,7 +27,7 @@ export default function Top10Page() {
           }}
         />
         <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: 10 }}>
-          <Trophy size={28} color="#E8420A" />
+          <Flame size={28} color="#E8420A" />
           <h1
             style={{
               fontFamily: "var(--app-font-display)",
@@ -43,7 +37,7 @@ export default function Top10Page() {
               letterSpacing: "0.04em",
             }}
           >
-            TOP 10 NOMRS
+            TOP 10
           </h1>
         </div>
         <p style={{ color: "#7A6A58", fontSize: "0.85rem", margin: "8px 0 0" }}>
@@ -55,29 +49,27 @@ export default function Top10Page() {
         {isLoading && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} style={{ height: 90, background: "#F0E8DC", borderRadius: 14 }} />
+              <div key={i} style={{ height: 80, background: "#F0E8DC", borderRadius: 14 }} />
             ))}
           </div>
         )}
 
         {!isLoading && restaurants && restaurants.length === 0 && (
           <div style={{ textAlign: "center", padding: "48px 0" }}>
-            <Trophy size={48} color="#D4C8BC" style={{ marginBottom: 16 }} />
+            <Flame size={48} color="#D4C8BC" style={{ marginBottom: 16 }} />
             <h3 style={{ fontFamily: "var(--app-font-display)", fontSize: "1.5rem", color: "#1A1208", marginBottom: 8 }}>
               NO RANKINGS YET
             </h3>
             <p style={{ color: "#7A6A58", fontSize: "0.9rem" }}>
-              Once restaurants get reviews, the top 10 will appear here.
+              Once restaurants get noms, the top 10 will appear here.
             </p>
           </div>
         )}
 
         {!isLoading && restaurants && restaurants.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {restaurants.map((r) => {
               const rank = r.rank;
-              const rankStyle = RANK_STYLES[rank] ?? { bg: "#F0E8DC", text: "#1A1208", border: "#E8DDD0" };
-
               return (
                 <Link key={r.id} href={`/restaurant/${r.id}`}>
                   <div
@@ -85,8 +77,8 @@ export default function Top10Page() {
                       display: "flex",
                       alignItems: "center",
                       gap: 14,
-                      background: rank <= 3 ? "#FFF9F2" : "#FFF9F2",
-                      border: rank <= 3 ? `2px solid ${rankStyle.border}` : "1px solid #E8DDD0",
+                      background: "#FFF9F2",
+                      border: "1px solid #E8DDD0",
                       borderRadius: 16,
                       padding: "14px 16px",
                       cursor: "pointer",
@@ -99,16 +91,16 @@ export default function Top10Page() {
                       (e.currentTarget as HTMLDivElement).style.transform = "translateX(0)";
                     }}
                   >
-                    {/* Rank Badge */}
+                    {/* Rank number */}
                     <div
                       style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 12,
-                        background: rankStyle.bg,
-                        color: rankStyle.text,
+                        width: 40,
+                        height: 40,
+                        borderRadius: 10,
+                        background: "#F0E8DC",
+                        color: "#1A1208",
                         fontFamily: "var(--app-font-display)",
-                        fontSize: rank <= 9 ? "1.6rem" : "1.3rem",
+                        fontSize: rank <= 9 ? "1.5rem" : "1.2rem",
                         letterSpacing: "0.03em",
                         display: "flex",
                         alignItems: "center",
@@ -116,15 +108,34 @@ export default function Top10Page() {
                         flexShrink: 0,
                       }}
                     >
-                      {rank <= 3 ? <Trophy size={20} /> : rank}
+                      {rank}
                     </div>
+
+                    {/* Image thumbnail */}
+                    {r.image_url && (
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 10,
+                          overflow: "hidden",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <img
+                          src={r.image_url}
+                          alt={r.name}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      </div>
+                    )}
 
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div
                         style={{
                           fontFamily: "var(--app-font-display)",
-                          fontSize: "1.25rem",
+                          fontSize: "1.2rem",
                           letterSpacing: "0.04em",
                           color: "#1A1208",
                           whiteSpace: "nowrap",
@@ -147,13 +158,13 @@ export default function Top10Page() {
                         <MapPin size={10} />
                         <span>{r.area}</span>
                         <span style={{ opacity: 0.4 }}>•</span>
-                        <span>{r.total_reviews} review{r.total_reviews !== 1 ? "s" : ""}</span>
+                        <span>{r.total_noms} nom{r.total_noms !== 1 ? "s" : ""}</span>
                       </div>
                     </div>
 
                     {/* Score */}
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      {r.avg_rating != null ? (
+                      {r.avg_score != null ? (
                         <>
                           <div
                             style={{
@@ -164,7 +175,7 @@ export default function Top10Page() {
                               lineHeight: 1,
                             }}
                           >
-                            {(r.avg_rating as number).toFixed(1)}
+                            {(r.avg_score as number).toFixed(1)}
                           </div>
                           <div
                             style={{
@@ -174,11 +185,11 @@ export default function Top10Page() {
                               letterSpacing: "0.08em",
                             }}
                           >
-                            NOM+
+                            /10
                           </div>
                         </>
                       ) : (
-                        <div style={{ color: "#D4C8BC", fontSize: "0.8rem" }}>No rating</div>
+                        <div style={{ color: "#D4C8BC", fontSize: "0.8rem" }}>No noms</div>
                       )}
                     </div>
                   </div>

@@ -1,10 +1,10 @@
 import { useAuth } from "@/lib/auth";
-import { useGetUser, useGetUserReviews } from "@workspace/api-client-react";
+import { useGetUser, useGetUserNoms } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Star, MapPin, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { NomBadge } from "@/components/NomScore";
 
-function EmptyReviews() {
+function EmptyNoms() {
   return (
     <div style={{ textAlign: "center", padding: "40px 24px", background: "#FFF9F2", borderRadius: 14, border: "1px solid #E8DDD0" }}>
       <div
@@ -19,13 +19,17 @@ function EmptyReviews() {
           margin: "0 auto 14px",
         }}
       >
-        <Star size={28} color="#D4C8BC" />
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect x="4" y="12" width="20" height="10" rx="2.5" fill="#D4C8BC"/>
+          <rect x="2" y="9" width="24" height="4" rx="2" fill="#C4B8AC"/>
+          <ellipse cx="14" cy="9" rx="8" ry="5" fill="#D4C8BC"/>
+        </svg>
       </div>
       <h3 style={{ fontFamily: "var(--app-font-display)", fontSize: "1.3rem", color: "#1A1208", marginBottom: 8 }}>
         NO NOMS YET
       </h3>
       <p style={{ color: "#7A6A58", fontSize: "0.85rem", lineHeight: 1.5, marginBottom: 16 }}>
-        You haven't reviewed any burger spots yet. Get out there and nom!
+        You haven't nommed any burger spots yet. Get out there!
       </p>
       <Link href="/explore">
         <button style={{ background: "#E8420A", color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontFamily: "var(--app-font-display)", fontSize: "0.95rem", cursor: "pointer" }}>
@@ -42,8 +46,8 @@ export default function ProfilePage() {
   const { data: profile } = useGetUser(user?.id ?? "", {
     query: { enabled: !!user?.id, queryKey: ["getUser", user?.id] },
   });
-  const { data: reviews } = useGetUserReviews(user?.id ?? "", {
-    query: { enabled: !!user?.id, queryKey: ["getUserReviews", user?.id] },
+  const { data: noms } = useGetUserNoms(user?.id ?? "", {
+    query: { enabled: !!user?.id, queryKey: ["getUserNoms", user?.id] },
   });
 
   if (!user) {
@@ -63,9 +67,9 @@ export default function ProfilePage() {
 
   const displayName = user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Nomr";
   const initials = displayName.slice(0, 2).toUpperCase();
-  const totalReviews = reviews?.length ?? 0;
-  const avgRating = reviews && reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.overall_rating, 0) / reviews.length
+  const totalNoms = noms?.length ?? 0;
+  const avgScore = noms && noms.length > 0
+    ? noms.reduce((sum, n) => sum + n.score, 0) / noms.length
     : null;
 
   return (
@@ -80,7 +84,6 @@ export default function ProfilePage() {
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            {/* Avatar */}
             <div
               style={{
                 width: 64,
@@ -137,33 +140,41 @@ export default function ProfilePage() {
         <div style={{ display: "flex", gap: 20, marginTop: 20 }}>
           <div>
             <div style={{ fontFamily: "var(--app-font-display)", fontSize: "2rem", color: "white", letterSpacing: "0.04em" }}>
-              {totalReviews}
+              {totalNoms}
             </div>
             <div style={{ fontSize: "0.7rem", color: "#7A6A58", fontWeight: 500 }}>NOMS</div>
           </div>
-          {avgRating != null && (
+          {avgScore != null && (
             <div>
               <div style={{ fontFamily: "var(--app-font-display)", fontSize: "2rem", color: "#E8420A", letterSpacing: "0.04em" }}>
-                {avgRating.toFixed(1)}
+                {avgScore.toFixed(1)}
               </div>
               <div style={{ fontSize: "0.7rem", color: "#7A6A58", fontWeight: 500 }}>AVG SCORE</div>
+            </div>
+          )}
+          {profile?.total_noms != null && (
+            <div>
+              <div style={{ fontFamily: "var(--app-font-display)", fontSize: "2rem", color: "white", letterSpacing: "0.04em" }}>
+                {profile.total_noms}
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "#7A6A58", fontWeight: 500 }}>TOTAL</div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Reviews */}
+      {/* Noms list */}
       <div style={{ padding: "20px" }}>
         <h2 style={{ fontFamily: "var(--app-font-display)", fontSize: "1.4rem", margin: "0 0 14px", letterSpacing: "0.04em" }}>
           MY NOMS
         </h2>
 
-        {totalReviews === 0 ? (
-          <EmptyReviews />
+        {totalNoms === 0 ? (
+          <EmptyNoms />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {reviews?.map((review) => (
-              <Link key={review.id} href={`/restaurant/${review.restaurant_id}`}>
+            {noms?.map((nom) => (
+              <Link key={nom.id} href={`/restaurant/${nom.restaurant_id}`}>
                 <div
                   style={{
                     background: "#FFF9F2",
@@ -176,30 +187,27 @@ export default function ProfilePage() {
                   onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = "translateX(4px)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = "translateX(0)"; }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                     <div style={{ fontSize: "0.75rem", color: "#7A6A58" }}>
-                      {new Date(review.created_at).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}
+                      {new Date(nom.created_at).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}
                     </div>
-                    <NomBadge rating={review.overall_rating} size="sm" />
+                    <NomBadge score={nom.score} size="sm" />
                   </div>
-                  <div style={{ display: "flex", gap: 12 }}>
-                    {[
-                      { label: "Patty", value: review.patty_rating },
-                      { label: "Bun", value: review.bun_rating },
-                      { label: "Sauce", value: review.sauce_rating },
-                      { label: "Value", value: review.value_rating },
-                    ].map(({ label, value }) => (
-                      <div key={label} style={{ textAlign: "center", flex: 1 }}>
-                        <div style={{ fontFamily: "var(--app-font-display)", fontSize: "1.1rem", color: "#E8420A", letterSpacing: "0.04em" }}>
-                          {value.toFixed(0)}
-                        </div>
-                        <div style={{ fontSize: "0.65rem", color: "#7A6A58", fontWeight: 500 }}>{label}</div>
-                      </div>
-                    ))}
+                  <div
+                    style={{
+                      fontFamily: "var(--app-font-display)",
+                      fontSize: "2rem",
+                      color: "#E8420A",
+                      letterSpacing: "0.04em",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {nom.score.toFixed(1)}
+                    <span style={{ fontSize: "0.9rem", color: "#7A6A58" }}>/10</span>
                   </div>
-                  {review.comment && (
+                  {nom.comment && (
                     <p style={{ margin: "8px 0 0", fontSize: "0.82rem", color: "#7A6A58", fontStyle: "italic", lineHeight: 1.4 }}>
-                      "{review.comment.length > 80 ? review.comment.slice(0, 80) + "..." : review.comment}"
+                      "{nom.comment.length > 80 ? nom.comment.slice(0, 80) + "..." : nom.comment}"
                     </p>
                   )}
                 </div>

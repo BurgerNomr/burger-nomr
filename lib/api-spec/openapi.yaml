@@ -2,8 +2,8 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: Burger Nomr - Halaal burger review platform for Cape Town
+  version: 0.2.0
+  description: Burger Nomr - Halaal burger nom platform for Cape Town
 servers:
   - url: /api
     description: Base API path
@@ -12,8 +12,8 @@ tags:
     description: Health operations
   - name: restaurants
     description: Restaurant operations
-  - name: reviews
-    description: Review operations
+  - name: noms
+    description: Nom operations
   - name: users
     description: User operations
 
@@ -86,7 +86,7 @@ paths:
     get:
       operationId: getTopRestaurants
       tags: [restaurants]
-      summary: Get top 10 restaurants by average rating
+      summary: Get top 10 restaurants by average nom score
       responses:
         "200":
           description: Top 10 restaurants
@@ -139,11 +139,11 @@ paths:
         "404":
           description: Not found
 
-  /restaurants/{id}/reviews:
+  /restaurants/{id}/noms:
     get:
-      operationId: getRestaurantReviews
+      operationId: getRestaurantNoms
       tags: [restaurants]
-      summary: Get all reviews for a restaurant
+      summary: Get all noms for a restaurant
       parameters:
         - name: id
           in: path
@@ -152,32 +152,32 @@ paths:
             type: string
       responses:
         "200":
-          description: Reviews for restaurant
+          description: Noms for restaurant
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Review"
+                  $ref: "#/components/schemas/Nom"
 
-  /reviews:
+  /noms:
     post:
-      operationId: createReview
-      tags: [reviews]
-      summary: Submit a review (Nom+)
+      operationId: createNom
+      tags: [noms]
+      summary: Submit a nom score
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateReviewBody"
+              $ref: "#/components/schemas/CreateNomBody"
       responses:
         "201":
-          description: Created review
+          description: Created nom
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Review"
+                $ref: "#/components/schemas/Nom"
 
   /users/{id}:
     get:
@@ -198,11 +198,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserProfile"
 
-  /users/{id}/reviews:
+  /users/{id}/noms:
     get:
-      operationId: getUserReviews
+      operationId: getUserNoms
       tags: [users]
-      summary: Get all reviews by a user
+      summary: Get all noms by a user
       parameters:
         - name: id
           in: path
@@ -211,13 +211,13 @@ paths:
             type: string
       responses:
         "200":
-          description: User reviews
+          description: User noms
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Review"
+                  $ref: "#/components/schemas/Nom"
 
   /stats/summary:
     get:
@@ -258,10 +258,10 @@ components:
         image_url:
           type: string
           nullable: true
-        avg_rating:
+        avg_score:
           type: number
           nullable: true
-        total_reviews:
+        total_noms:
           type: integer
         price_range:
           type: string
@@ -284,7 +284,7 @@ components:
         - area
         - address
         - description
-        - total_reviews
+        - total_noms
         - tags
         - created_at
 
@@ -293,10 +293,10 @@ components:
         - $ref: "#/components/schemas/Restaurant"
         - type: object
           properties:
-            reviews:
+            noms:
               type: array
               items:
-                $ref: "#/components/schemas/Review"
+                $ref: "#/components/schemas/Nom"
 
     RestaurantWithRank:
       allOf:
@@ -308,7 +308,7 @@ components:
           required:
             - rank
 
-    Review:
+    Nom:
       type: object
       properties:
         id:
@@ -322,15 +322,7 @@ components:
         user_avatar:
           type: string
           nullable: true
-        overall_rating:
-          type: number
-        patty_rating:
-          type: number
-        bun_rating:
-          type: number
-        sauce_rating:
-          type: number
-        value_rating:
+        score:
           type: number
         comment:
           type: string
@@ -342,11 +334,7 @@ components:
         - restaurant_id
         - user_id
         - user_name
-        - overall_rating
-        - patty_rating
-        - bun_rating
-        - sauce_rating
-        - value_rating
+        - score
         - created_at
 
     UserProfile:
@@ -361,7 +349,7 @@ components:
         avatar_url:
           type: string
           nullable: true
-        total_reviews:
+        total_noms:
           type: integer
         joined_at:
           type: string
@@ -369,7 +357,7 @@ components:
         - id
         - name
         - email
-        - total_reviews
+        - total_noms
         - joined_at
 
     SummaryStats:
@@ -377,17 +365,17 @@ components:
       properties:
         total_restaurants:
           type: integer
-        total_reviews:
+        total_noms:
           type: integer
         top_area:
           type: string
           nullable: true
-        avg_rating_platform:
+        avg_score_platform:
           type: number
           nullable: true
       required:
         - total_restaurants
-        - total_reviews
+        - total_noms
 
     CreateRestaurantBody:
       type: object
@@ -423,7 +411,7 @@ components:
         - description
         - tags
 
-    CreateReviewBody:
+    CreateNomBody:
       type: object
       properties:
         restaurant_id:
@@ -435,15 +423,7 @@ components:
         user_avatar:
           type: string
           nullable: true
-        overall_rating:
-          type: number
-        patty_rating:
-          type: number
-        bun_rating:
-          type: number
-        sauce_rating:
-          type: number
-        value_rating:
+        score:
           type: number
         comment:
           type: string
@@ -452,8 +432,4 @@ components:
         - restaurant_id
         - user_id
         - user_name
-        - overall_rating
-        - patty_rating
-        - bun_rating
-        - sauce_rating
-        - value_rating
+        - score

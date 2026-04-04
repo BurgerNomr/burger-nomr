@@ -1,18 +1,18 @@
 import { Link } from "wouter";
-import { MapPin, Star } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 interface RestaurantCardProps {
   id: string;
   name: string;
   area: string;
   image_url?: string | null;
-  avg_rating?: number | null;
-  total_reviews: number;
+  avg_score?: number | null;
+  total_noms: number;
   tags: string[];
   price_range?: string | null;
 }
 
-export function RestaurantCard({ id, name, area, image_url, avg_rating, total_reviews, tags, price_range }: RestaurantCardProps) {
+export function RestaurantCard({ id, name, area, image_url, avg_score, total_noms, tags, price_range }: RestaurantCardProps) {
   return (
     <Link href={`/restaurant/${id}`}>
       <div
@@ -66,7 +66,8 @@ export function RestaurantCard({ id, name, area, image_url, avg_rating, total_re
               </svg>
             </div>
           )}
-          {avg_rating != null && (
+
+          {avg_score != null && (
             <div
               style={{
                 position: "absolute",
@@ -75,19 +76,16 @@ export function RestaurantCard({ id, name, area, image_url, avg_rating, total_re
                 background: "#E8420A",
                 color: "white",
                 fontFamily: "var(--app-font-display)",
-                fontSize: "1.1rem",
+                fontSize: "1.05rem",
                 letterSpacing: "0.05em",
-                padding: "2px 10px",
+                padding: "3px 10px",
                 borderRadius: 99,
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
               }}
             >
-              <Star size={12} fill="white" strokeWidth={0} />
-              {avg_rating.toFixed(1)}
+              {avg_score.toFixed(1)}
             </div>
           )}
+
           {price_range && (
             <div
               style={{
@@ -134,7 +132,7 @@ export function RestaurantCard({ id, name, area, image_url, avg_rating, total_re
             <MapPin size={11} />
             <span>{area}</span>
             <span style={{ margin: "0 4px", opacity: 0.4 }}>•</span>
-            <span>{total_reviews} nom{total_reviews !== 1 ? "s" : ""}</span>
+            <span>{total_noms} nom{total_noms !== 1 ? "s" : ""}</span>
           </div>
           {tags.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>

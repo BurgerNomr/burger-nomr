@@ -5,20 +5,14 @@ import { RestaurantCard } from "@/components/RestaurantCard";
 
 const CAPE_TOWN_AREAS = [
   "All Areas",
-  "Bo-Kaap",
-  "Sea Point",
-  "CBD",
-  "Claremont",
-  "Wynberg",
-  "Athlone",
-  "Mitchells Plain",
-  "Bellville",
-  "Woodstock",
+  "City Bowl",
+  "Atlantic Seaboard",
+  "Southern Suburbs",
+  "Northern Suburbs",
+  "V&A Waterfront",
   "Observatory",
-  "Salt River",
-  "Green Point",
-  "De Waterkant",
-  "Rondebosch",
+  "Gardens",
+  "Other Cape Town",
 ];
 
 function EmptyExplore({ search, area }: { search: string; area: string }) {
@@ -158,10 +152,7 @@ export default function ExplorePage() {
         {isLoading && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                style={{ height: 220, background: "#F0E8DC", borderRadius: 16 }}
-              />
+              <div key={i} style={{ height: 220, background: "#F0E8DC", borderRadius: 16 }} />
             ))}
           </div>
         )}
@@ -179,8 +170,8 @@ export default function ExplorePage() {
                 name={r.name}
                 area={r.area}
                 image_url={r.image_url}
-                avg_rating={r.avg_rating}
-                total_reviews={r.total_reviews}
+                avg_score={r.avg_score}
+                total_noms={r.total_noms}
                 tags={r.tags}
                 price_range={r.price_range}
               />

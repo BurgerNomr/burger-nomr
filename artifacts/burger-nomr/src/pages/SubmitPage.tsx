@@ -6,21 +6,14 @@ import { ArrowLeft, Check } from "lucide-react";
 import { Link } from "wouter";
 
 const AREAS = [
-  "Bo-Kaap",
-  "Sea Point",
-  "CBD",
-  "Claremont",
-  "Wynberg",
-  "Athlone",
-  "Mitchells Plain",
-  "Bellville",
-  "Woodstock",
+  "City Bowl",
+  "Atlantic Seaboard",
+  "Southern Suburbs",
+  "Northern Suburbs",
+  "V&A Waterfront",
   "Observatory",
-  "Salt River",
-  "Green Point",
-  "De Waterkant",
-  "Rondebosch",
-  "Other",
+  "Gardens",
+  "Other Cape Town",
 ];
 
 const PRICE_RANGES = ["R", "RR", "RRR", "RRRR"];
@@ -37,6 +30,7 @@ const inputStyle: React.CSSProperties = {
   background: "#FFF9F2",
   color: "#1A1208",
   outline: "none",
+  boxSizing: "border-box",
 };
 
 const labelStyle: React.CSSProperties = {
@@ -156,7 +150,6 @@ export default function SubmitPage() {
 
       <div style={{ padding: "24px 20px" }}>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          {/* Name */}
           <div>
             <label style={labelStyle}>Restaurant Name *</label>
             <input
@@ -169,7 +162,6 @@ export default function SubmitPage() {
             />
           </div>
 
-          {/* Area */}
           <div>
             <label style={labelStyle}>Area *</label>
             <select
@@ -185,12 +177,11 @@ export default function SubmitPage() {
             </select>
           </div>
 
-          {/* Address */}
           <div>
             <label style={labelStyle}>Street Address *</label>
             <input
               type="text"
-              placeholder="e.g. 12 Wale Street, Bo-Kaap"
+              placeholder="e.g. 12 Wale Street, City Bowl"
               value={form.address}
               onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
               required
@@ -198,7 +189,6 @@ export default function SubmitPage() {
             />
           </div>
 
-          {/* Description */}
           <div>
             <label style={labelStyle}>Description</label>
             <textarea
@@ -210,7 +200,6 @@ export default function SubmitPage() {
             />
           </div>
 
-          {/* Image URL */}
           <div>
             <label style={labelStyle}>Photo URL (optional)</label>
             <input
@@ -222,7 +211,6 @@ export default function SubmitPage() {
             />
           </div>
 
-          {/* Price Range */}
           <div>
             <label style={labelStyle}>Price Range</label>
             <div style={{ display: "flex", gap: 8 }}>
@@ -252,7 +240,6 @@ export default function SubmitPage() {
             </div>
           </div>
 
-          {/* Tags */}
           <div>
             <label style={labelStyle}>Tags</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

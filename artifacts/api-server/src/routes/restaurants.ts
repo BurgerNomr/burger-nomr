@@ -6,15 +6,44 @@ import {
   ListRestaurantsQueryParams,
   GetRecentRestaurantsQueryParams,
 } from "@workspace/api-zod";
-import { eq, desc, ilike, avg, count, sql, and } from "drizzle-orm";
+import { eq, desc, ilike, avg, count, and } from "drizzle-orm";
 
 const router: IRouter = Router();
+
+function formatRestaurant(r: {
+  id: string;
+  name: string;
+  area: string;
+  address: string;
+  description: string;
+  image_url: string | null;
+  price_range: string | null;
+  tags: string[];
+  latitude: string | null;
+  longitude: string | null;
+  created_at: Date;
+  avg_score: string | null;
+  total_noms: string | bigint;
+}) {
+  return {
+    ...r,
+    avg_score: r.avg_score ? Number(r.avg_score) : null,
+    total_noms: Number(r.total_noms),
+    latitude: r.latitude ? Number(r.latitude) : null,
+    longitude: r.longitude ? Number(r.longitude) : null,
+    created_at: r.created_at.toISOString(),
+  };
+}
 
 router.get("/restaurants", async (req, res): Promise<void> => {
   const parsed = ListRestaurantsQueryParams.safeParse(req.query);
   const params = parsed.success ? parsed.data : { limit: 20, offset: 0 };
 
-  let query = db
+  const conditions = [];
+  if (params.search) conditions.push(ilike(restaurantsTable.name, `%${params.search}%`));
+  if (params.area) conditions.push(ilike(restaurantsTable.area, `%${params.area}%`));
+
+  const rows = await db
     .select({
       id: restaurantsTable.id,
       name: restaurantsTable.name,
@@ -27,63 +56,18 @@ router.get("/restaurants", async (req, res): Promise<void> => {
       latitude: restaurantsTable.latitude,
       longitude: restaurantsTable.longitude,
       created_at: restaurantsTable.created_at,
-      avg_rating: avg(reviewsTable.overall_rating),
-      total_reviews: count(reviewsTable.id),
+      avg_score: avg(reviewsTable.score),
+      total_noms: count(reviewsTable.id),
     })
     .from(restaurantsTable)
     .leftJoin(reviewsTable, eq(restaurantsTable.id, reviewsTable.restaurant_id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .groupBy(restaurantsTable.id)
     .orderBy(desc(restaurantsTable.created_at))
     .limit(params.limit ?? 20)
     .offset(params.offset ?? 0);
 
-  const conditions = [];
-  if (params.search) {
-    conditions.push(ilike(restaurantsTable.name, `%${params.search}%`));
-  }
-  if (params.area) {
-    conditions.push(ilike(restaurantsTable.area, `%${params.area}%`));
-  }
-
-  let rows;
-  if (conditions.length > 0) {
-    rows = await db
-      .select({
-        id: restaurantsTable.id,
-        name: restaurantsTable.name,
-        area: restaurantsTable.area,
-        address: restaurantsTable.address,
-        description: restaurantsTable.description,
-        image_url: restaurantsTable.image_url,
-        price_range: restaurantsTable.price_range,
-        tags: restaurantsTable.tags,
-        latitude: restaurantsTable.latitude,
-        longitude: restaurantsTable.longitude,
-        created_at: restaurantsTable.created_at,
-        avg_rating: avg(reviewsTable.overall_rating),
-        total_reviews: count(reviewsTable.id),
-      })
-      .from(restaurantsTable)
-      .leftJoin(reviewsTable, eq(restaurantsTable.id, reviewsTable.restaurant_id))
-      .where(and(...conditions))
-      .groupBy(restaurantsTable.id)
-      .orderBy(desc(restaurantsTable.created_at))
-      .limit(params.limit ?? 20)
-      .offset(params.offset ?? 0);
-  } else {
-    rows = await query;
-  }
-
-  const result = rows.map((r) => ({
-    ...r,
-    avg_rating: r.avg_rating ? Number(r.avg_rating) : null,
-    total_reviews: Number(r.total_reviews),
-    latitude: r.latitude ? Number(r.latitude) : null,
-    longitude: r.longitude ? Number(r.longitude) : null,
-    created_at: r.created_at.toISOString(),
-  }));
-
-  res.json(result);
+  res.json(rows.map(formatRestaurant));
 });
 
 router.get("/restaurants/top", async (_req, res): Promise<void> => {
@@ -100,26 +84,16 @@ router.get("/restaurants/top", async (_req, res): Promise<void> => {
       latitude: restaurantsTable.latitude,
       longitude: restaurantsTable.longitude,
       created_at: restaurantsTable.created_at,
-      avg_rating: avg(reviewsTable.overall_rating),
-      total_reviews: count(reviewsTable.id),
+      avg_score: avg(reviewsTable.score),
+      total_noms: count(reviewsTable.id),
     })
     .from(restaurantsTable)
     .leftJoin(reviewsTable, eq(restaurantsTable.id, reviewsTable.restaurant_id))
     .groupBy(restaurantsTable.id)
-    .orderBy(desc(avg(reviewsTable.overall_rating)))
+    .orderBy(desc(avg(reviewsTable.score)))
     .limit(10);
 
-  const result = rows.map((r, i) => ({
-    ...r,
-    avg_rating: r.avg_rating ? Number(r.avg_rating) : null,
-    total_reviews: Number(r.total_reviews),
-    latitude: r.latitude ? Number(r.latitude) : null,
-    longitude: r.longitude ? Number(r.longitude) : null,
-    created_at: r.created_at.toISOString(),
-    rank: i + 1,
-  }));
-
-  res.json(result);
+  res.json(rows.map((r, i) => ({ ...formatRestaurant(r), rank: i + 1 })));
 });
 
 router.get("/restaurants/recent", async (req, res): Promise<void> => {
@@ -139,8 +113,8 @@ router.get("/restaurants/recent", async (req, res): Promise<void> => {
       latitude: restaurantsTable.latitude,
       longitude: restaurantsTable.longitude,
       created_at: restaurantsTable.created_at,
-      avg_rating: avg(reviewsTable.overall_rating),
-      total_reviews: count(reviewsTable.id),
+      avg_score: avg(reviewsTable.score),
+      total_noms: count(reviewsTable.id),
     })
     .from(restaurantsTable)
     .leftJoin(reviewsTable, eq(restaurantsTable.id, reviewsTable.restaurant_id))
@@ -148,16 +122,7 @@ router.get("/restaurants/recent", async (req, res): Promise<void> => {
     .orderBy(desc(restaurantsTable.created_at))
     .limit(limit);
 
-  const result = rows.map((r) => ({
-    ...r,
-    avg_rating: r.avg_rating ? Number(r.avg_rating) : null,
-    total_reviews: Number(r.total_reviews),
-    latitude: r.latitude ? Number(r.latitude) : null,
-    longitude: r.longitude ? Number(r.longitude) : null,
-    created_at: r.created_at.toISOString(),
-  }));
-
-  res.json(result);
+  res.json(rows.map(formatRestaurant));
 });
 
 router.get("/restaurants/:id", async (req, res): Promise<void> => {
@@ -181,8 +146,8 @@ router.get("/restaurants/:id", async (req, res): Promise<void> => {
       latitude: restaurantsTable.latitude,
       longitude: restaurantsTable.longitude,
       created_at: restaurantsTable.created_at,
-      avg_rating: avg(reviewsTable.overall_rating),
-      total_reviews: count(reviewsTable.id),
+      avg_score: avg(reviewsTable.score),
+      total_noms: count(reviewsTable.id),
     })
     .from(restaurantsTable)
     .leftJoin(reviewsTable, eq(restaurantsTable.id, reviewsTable.restaurant_id))
@@ -194,50 +159,36 @@ router.get("/restaurants/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const r = rows[0];
-  const reviews = await db
+  const noms = await db
     .select()
     .from(reviewsTable)
     .where(eq(reviewsTable.restaurant_id, params.data.id))
     .orderBy(desc(reviewsTable.created_at));
 
   res.json({
-    ...r,
-    avg_rating: r.avg_rating ? Number(r.avg_rating) : null,
-    total_reviews: Number(r.total_reviews),
-    latitude: r.latitude ? Number(r.latitude) : null,
-    longitude: r.longitude ? Number(r.longitude) : null,
-    created_at: r.created_at.toISOString(),
-    reviews: reviews.map((rev) => ({
-      ...rev,
-      overall_rating: Number(rev.overall_rating),
-      patty_rating: Number(rev.patty_rating),
-      bun_rating: Number(rev.bun_rating),
-      sauce_rating: Number(rev.sauce_rating),
-      value_rating: Number(rev.value_rating),
-      created_at: rev.created_at.toISOString(),
+    ...formatRestaurant(rows[0]),
+    noms: noms.map((n) => ({
+      ...n,
+      score: Number(n.score),
+      created_at: n.created_at.toISOString(),
     })),
   });
 });
 
-router.get("/restaurants/:id/reviews", async (req, res): Promise<void> => {
+router.get("/restaurants/:id/noms", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
-  const reviews = await db
+  const noms = await db
     .select()
     .from(reviewsTable)
     .where(eq(reviewsTable.restaurant_id, raw))
     .orderBy(desc(reviewsTable.created_at));
 
   res.json(
-    reviews.map((r) => ({
-      ...r,
-      overall_rating: Number(r.overall_rating),
-      patty_rating: Number(r.patty_rating),
-      bun_rating: Number(r.bun_rating),
-      sauce_rating: Number(r.sauce_rating),
-      value_rating: Number(r.value_rating),
-      created_at: r.created_at.toISOString(),
+    noms.map((n) => ({
+      ...n,
+      score: Number(n.score),
+      created_at: n.created_at.toISOString(),
     }))
   );
 });
@@ -251,16 +202,13 @@ router.post("/restaurants", async (req, res): Promise<void> => {
 
   const [restaurant] = await db
     .insert(restaurantsTable)
-    .values({
-      ...parsed.data,
-      tags: parsed.data.tags ?? [],
-    })
+    .values({ ...parsed.data, tags: parsed.data.tags ?? [] })
     .returning();
 
   res.status(201).json({
     ...restaurant,
-    avg_rating: null,
-    total_reviews: 0,
+    avg_score: null,
+    total_noms: 0,
     latitude: restaurant.latitude ? Number(restaurant.latitude) : null,
     longitude: restaurant.longitude ? Number(restaurant.longitude) : null,
     created_at: restaurant.created_at.toISOString(),

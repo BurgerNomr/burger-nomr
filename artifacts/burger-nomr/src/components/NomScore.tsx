@@ -1,66 +1,66 @@
-interface NomScoreProps {
-  overall_rating?: number | null;
-  patty_rating?: number | null;
-  bun_rating?: number | null;
-  sauce_rating?: number | null;
-  value_rating?: number | null;
+interface ScoreBarProps {
+  score: number;
   size?: "sm" | "lg";
 }
 
-function RatingBar({ label, value, size = "sm" }: { label: string; value?: number | null; size?: "sm" | "lg" }) {
-  const pct = value ? (value / 5) * 100 : 0;
+function ScoreBar({ score, size = "sm" }: ScoreBarProps) {
+  const pct = (score / 10) * 100;
+  const color = pct >= 80 ? "#E8420A" : pct >= 60 ? "#F07040" : "#D4C8BC";
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div
+      style={{
+        height: size === "lg" ? 10 : 7,
+        background: "#F0E8DC",
+        borderRadius: 99,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          height: "100%",
+          width: `${pct}%`,
+          background: color,
+          borderRadius: 99,
+          transition: "width 0.5s ease",
+        }}
+      />
+    </div>
+  );
+}
+
+export function NomScore({ score, size = "sm" }: { score?: number | null; size?: "sm" | "lg" }) {
+  if (score == null) {
+    return (
+      <p style={{ color: "#7A6A58", fontSize: "0.85rem", margin: "8px 0" }}>
+        No noms yet — be the first!
+      </p>
+    );
+  }
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: size === "lg" ? 8 : 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <span style={{ fontSize: size === "lg" ? "0.85rem" : "0.78rem", color: "#7A6A58", fontWeight: 500 }}>
-          {label}
+          Avg Nom Score
         </span>
         <span
           style={{
             fontFamily: "var(--app-font-display)",
-            fontSize: size === "lg" ? "1rem" : "0.9rem",
-            color: "#1A1208",
+            fontSize: size === "lg" ? "1.6rem" : "1.1rem",
+            color: "#E8420A",
             letterSpacing: "0.04em",
+            lineHeight: 1,
           }}
         >
-          {value != null ? value.toFixed(1) : "—"}
+          {score.toFixed(1)}<span style={{ fontSize: "0.6em", color: "#7A6A58" }}>/10</span>
         </span>
       </div>
-      <div
-        style={{
-          height: size === "lg" ? 8 : 6,
-          background: "#F0E8DC",
-          borderRadius: 99,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            height: "100%",
-            width: `${pct}%`,
-            background: pct >= 80 ? "#E8420A" : pct >= 60 ? "#F07040" : "#D4C8BC",
-            borderRadius: 99,
-            transition: "width 0.5s ease",
-          }}
-        />
-      </div>
+      <ScoreBar score={score} size={size} />
     </div>
   );
 }
 
-export function NomScore({ overall_rating, patty_rating, bun_rating, sauce_rating, value_rating, size = "sm" }: NomScoreProps) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: size === "lg" ? 10 : 8 }}>
-      <RatingBar label="Patty" value={patty_rating} size={size} />
-      <RatingBar label="Bun" value={bun_rating} size={size} />
-      <RatingBar label="Sauce" value={sauce_rating} size={size} />
-      <RatingBar label="Value" value={value_rating} size={size} />
-    </div>
-  );
-}
-
-export function NomBadge({ rating, size = "md" }: { rating?: number | null; size?: "sm" | "md" | "lg" }) {
-  if (rating == null) return null;
+export function NomBadge({ score, size = "md" }: { score?: number | null; size?: "sm" | "md" | "lg" }) {
+  if (score == null) return null;
   const fontSize = size === "lg" ? "1.5rem" : size === "md" ? "1.1rem" : "0.85rem";
   return (
     <span
@@ -77,7 +77,7 @@ export function NomBadge({ rating, size = "md" }: { rating?: number | null; size
         fontSize,
       }}
     >
-      {rating.toFixed(1)} NOM+
+      {score.toFixed(1)}
     </span>
   );
 }
