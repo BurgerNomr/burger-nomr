@@ -3,20 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Burger Nomr - Halaal burger review platform for Cape Town
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: restaurants
+    description: Restaurant operations
+  - name: reviews
+    description: Review operations
+  - name: users
+    description: User operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +30,208 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /restaurants:
+    get:
+      operationId: listRestaurants
+      tags: [restaurants]
+      summary: List all restaurants
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: area
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of restaurants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Restaurant"
+    post:
+      operationId: createRestaurant
+      tags: [restaurants]
+      summary: Submit a new restaurant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRestaurantBody"
+      responses:
+        "201":
+          description: Created restaurant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+
+  /restaurants/top:
+    get:
+      operationId: getTopRestaurants
+      tags: [restaurants]
+      summary: Get top 10 restaurants by average rating
+      responses:
+        "200":
+          description: Top 10 restaurants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RestaurantWithRank"
+
+  /restaurants/recent:
+    get:
+      operationId: getRecentRestaurants
+      tags: [restaurants]
+      summary: Get recently added restaurants
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 6
+      responses:
+        "200":
+          description: Recently added restaurants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Restaurant"
+
+  /restaurants/{id}:
+    get:
+      operationId: getRestaurant
+      tags: [restaurants]
+      summary: Get restaurant by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Restaurant details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantDetail"
+        "404":
+          description: Not found
+
+  /restaurants/{id}/reviews:
+    get:
+      operationId: getRestaurantReviews
+      tags: [restaurants]
+      summary: Get all reviews for a restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reviews for restaurant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+
+  /reviews:
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Submit a review (Nom+)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewBody"
+      responses:
+        "201":
+          description: Created review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/{id}/reviews:
+    get:
+      operationId: getUserReviews
+      tags: [users]
+      summary: Get all reviews by a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+
+  /stats/summary:
+    get:
+      operationId: getSummaryStats
+      tags: [restaurants]
+      summary: Get platform summary stats
+      responses:
+        "200":
+          description: Summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SummaryStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +242,218 @@ components:
       required:
         - status
 
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        area:
+          type: string
+        address:
+          type: string
+        description:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+        avg_rating:
+          type: number
+          nullable: true
+        total_reviews:
+          type: integer
+        price_range:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+        created_at:
+          type: string
+      required:
+        - id
+        - name
+        - area
+        - address
+        - description
+        - total_reviews
+        - tags
+        - created_at
+
+    RestaurantDetail:
+      allOf:
+        - $ref: "#/components/schemas/Restaurant"
+        - type: object
+          properties:
+            reviews:
+              type: array
+              items:
+                $ref: "#/components/schemas/Review"
+
+    RestaurantWithRank:
+      allOf:
+        - $ref: "#/components/schemas/Restaurant"
+        - type: object
+          properties:
+            rank:
+              type: integer
+          required:
+            - rank
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        restaurant_id:
+          type: string
+        user_id:
+          type: string
+        user_name:
+          type: string
+        user_avatar:
+          type: string
+          nullable: true
+        overall_rating:
+          type: number
+        patty_rating:
+          type: number
+        bun_rating:
+          type: number
+        sauce_rating:
+          type: number
+        value_rating:
+          type: number
+        comment:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+      required:
+        - id
+        - restaurant_id
+        - user_id
+        - user_name
+        - overall_rating
+        - patty_rating
+        - bun_rating
+        - sauce_rating
+        - value_rating
+        - created_at
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        avatar_url:
+          type: string
+          nullable: true
+        total_reviews:
+          type: integer
+        joined_at:
+          type: string
+      required:
+        - id
+        - name
+        - email
+        - total_reviews
+        - joined_at
+
+    SummaryStats:
+      type: object
+      properties:
+        total_restaurants:
+          type: integer
+        total_reviews:
+          type: integer
+        top_area:
+          type: string
+          nullable: true
+        avg_rating_platform:
+          type: number
+          nullable: true
+      required:
+        - total_restaurants
+        - total_reviews
+
+    CreateRestaurantBody:
+      type: object
+      properties:
+        name:
+          type: string
+        area:
+          type: string
+        address:
+          type: string
+        description:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+        price_range:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+      required:
+        - name
+        - area
+        - address
+        - description
+        - tags
+
+    CreateReviewBody:
+      type: object
+      properties:
+        restaurant_id:
+          type: string
+        user_id:
+          type: string
+        user_name:
+          type: string
+        user_avatar:
+          type: string
+          nullable: true
+        overall_rating:
+          type: number
+        patty_rating:
+          type: number
+        bun_rating:
+          type: number
+        sauce_rating:
+          type: number
+        value_rating:
+          type: number
+        comment:
+          type: string
+          nullable: true
+      required:
+        - restaurant_id
+        - user_id
+        - user_name
+        - overall_rating
+        - patty_rating
+        - bun_rating
+        - sauce_rating
+        - value_rating
