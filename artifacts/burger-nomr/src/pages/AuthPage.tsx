@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { ArrowLeft } from "lucide-react";
 
 export default function AuthPage() {
   const { signIn, signUp } = useAuth();
+  const [location, navigate] = useLocation();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -10,6 +13,12 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const returnPath = (() => {
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const params = new URLSearchParams(search);
+    return params.get("return") ?? "/";
+  })();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +28,11 @@ export default function AuthPage() {
 
     if (mode === "login") {
       const { error } = await signIn(email, password);
-      if (error) setError(error.message);
+      if (error) {
+        setError(error.message);
+      } else {
+        navigate(returnPath);
+      }
     } else {
       if (!name.trim()) {
         setError("Please enter your name");
@@ -27,8 +40,11 @@ export default function AuthPage() {
         return;
       }
       const { error } = await signUp(email, password, name);
-      if (error) setError(error.message);
-      else setSuccess("Check your email to confirm your account, then log in.");
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess("Check your email to confirm your account, then sign in.");
+      }
     }
     setLoading(false);
   };
@@ -44,6 +60,7 @@ export default function AuthPage() {
     color: "#1A1208",
     outline: "none",
     transition: "border-color 0.15s",
+    boxSizing: "border-box",
   };
 
   return (
@@ -58,8 +75,29 @@ export default function AuthPage() {
         padding: "24px 20px",
       }}
     >
+      {/* Back button */}
+      <button
+        onClick={() => navigate("/")}
+        style={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          background: "none",
+          border: "none",
+          color: "#7A6A58",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          fontSize: "0.85rem",
+        }}
+      >
+        <ArrowLeft size={16} />
+        Back
+      </button>
+
       {/* Logo / Brand */}
-      <div style={{ textAlign: "center", marginBottom: 40 }}>
+      <div style={{ textAlign: "center", marginBottom: 36 }}>
         <div
           style={{
             width: 72,

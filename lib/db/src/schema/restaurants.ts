@@ -1,4 +1,4 @@
-import { pgTable, text, uuid, numeric, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, numeric, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -11,6 +11,7 @@ export const restaurantsTable = pgTable("restaurants", {
   image_url: text("image_url"),
   price_range: text("price_range"),
   tags: text("tags").array().notNull().default([]),
+  certifications: text("certifications").array().notNull().default([]),
   latitude: numeric("latitude", { precision: 10, scale: 7 }),
   longitude: numeric("longitude", { precision: 10, scale: 7 }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

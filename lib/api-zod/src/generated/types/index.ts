@@ -3,12 +3,16 @@
  * Do not edit manually.
  * Api
  * Burger Nomr - Halaal burger nom platform for Cape Town
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export * from "./createNomBody";
 export * from "./createRestaurantBody";
+export * from "./featuredNom";
 export * from "./getRecentRestaurantsParams";
+export * from "./getTopRestaurantsMode";
+export * from "./getTopRestaurantsParams";
+export * from "./getTopRestaurantsParamsMode";
 export * from "./healthStatus";
 export * from "./listRestaurantsParams";
 export * from "./nom";

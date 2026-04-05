@@ -1,21 +1,16 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.2.0
+  version: 0.3.0
   description: Burger Nomr - Halaal burger nom platform for Cape Town
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: restaurants
-    description: Restaurant operations
   - name: noms
-    description: Nom operations
   - name: users
-    description: User operations
 
 paths:
   /healthz:
@@ -86,10 +81,17 @@ paths:
     get:
       operationId: getTopRestaurants
       tags: [restaurants]
-      summary: Get top 10 restaurants by average nom score
+      summary: Get top 10 restaurants
+      parameters:
+        - name: mode
+          in: query
+          schema:
+            type: string
+            enum: [kashif, community]
+            default: community
       responses:
         "200":
-          description: Top 10 restaurants
+          description: Top restaurants
           content:
             application/json:
               schema:
@@ -108,6 +110,10 @@ paths:
           schema:
             type: integer
             default: 6
+        - name: area
+          in: query
+          schema:
+            type: string
       responses:
         "200":
           description: Recently added restaurants
@@ -179,6 +185,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/Nom"
 
+  /noms/kashif/featured:
+    get:
+      operationId: getKashifFeatured
+      tags: [noms]
+      summary: Get Kashif's highest-scoring nom with restaurant info
+      responses:
+        "200":
+          description: Featured Kashif nom
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeaturedNom"
+        "404":
+          description: No featured nom available
+
   /users/{id}:
     get:
       operationId: getUser
@@ -239,8 +260,7 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
     Restaurant:
       type: object
@@ -261,12 +281,19 @@ components:
         avg_score:
           type: number
           nullable: true
+        kashif_score:
+          type: number
+          nullable: true
         total_noms:
           type: integer
         price_range:
           type: string
           nullable: true
         tags:
+          type: array
+          items:
+            type: string
+        certifications:
           type: array
           items:
             type: string
@@ -286,6 +313,7 @@ components:
         - description
         - total_noms
         - tags
+        - certifications
         - created_at
 
     RestaurantDetail:
@@ -305,8 +333,7 @@ components:
           properties:
             rank:
               type: integer
-          required:
-            - rank
+          required: [rank]
 
     Nom:
       type: object
@@ -324,6 +351,9 @@ components:
           nullable: true
         score:
           type: number
+        burger_ordered:
+          type: string
+          nullable: true
         comment:
           type: string
           nullable: true
@@ -336,6 +366,17 @@ components:
         - user_name
         - score
         - created_at
+
+    FeaturedNom:
+      type: object
+      properties:
+        nom:
+          $ref: "#/components/schemas/Nom"
+        restaurant:
+          $ref: "#/components/schemas/Restaurant"
+      required:
+        - nom
+        - restaurant
 
     UserProfile:
       type: object
@@ -398,6 +439,10 @@ components:
           type: array
           items:
             type: string
+        certifications:
+          type: array
+          items:
+            type: string
         latitude:
           type: number
           nullable: true
@@ -425,6 +470,9 @@ components:
           nullable: true
         score:
           type: number
+        burger_ordered:
+          type: string
+          nullable: true
         comment:
           type: string
           nullable: true
@@ -433,3 +481,10 @@ components:
         - user_id
         - user_name
         - score
+
+    GetTopRestaurantsParams:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [kashif, community]

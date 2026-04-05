@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Burger Nomr - Halaal burger nom platform for Cape Town
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { Restaurant } from "./restaurant";
 

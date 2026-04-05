@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Burger Nomr - Halaal burger nom platform for Cape Town
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
@@ -19,7 +19,9 @@ import type {
 import type {
   CreateNomBody,
   CreateRestaurantBody,
+  FeaturedNom,
   GetRecentRestaurantsParams,
+  GetTopRestaurantsParams,
   HealthStatus,
   ListRestaurantsParams,
   Nom,
@@ -295,43 +297,62 @@ export const useCreateRestaurant = <
 };
 
 /**
- * @summary Get top 10 restaurants by average nom score
+ * @summary Get top 10 restaurants
  */
-export const getGetTopRestaurantsUrl = () => {
-  return `/api/restaurants/top`;
+export const getGetTopRestaurantsUrl = (params?: GetTopRestaurantsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/restaurants/top?${stringifiedParams}`
+    : `/api/restaurants/top`;
 };
 
 export const getTopRestaurants = async (
+  params?: GetTopRestaurantsParams,
   options?: RequestInit,
 ): Promise<RestaurantWithRank[]> => {
-  return customFetch<RestaurantWithRank[]>(getGetTopRestaurantsUrl(), {
+  return customFetch<RestaurantWithRank[]>(getGetTopRestaurantsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetTopRestaurantsQueryKey = () => {
-  return [`/api/restaurants/top`] as const;
+export const getGetTopRestaurantsQueryKey = (
+  params?: GetTopRestaurantsParams,
+) => {
+  return [`/api/restaurants/top`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetTopRestaurantsQueryOptions = <
   TData = Awaited<ReturnType<typeof getTopRestaurants>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getTopRestaurants>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetTopRestaurantsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTopRestaurants>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetTopRestaurantsQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetTopRestaurantsQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getTopRestaurants>>
-  > = ({ signal }) => getTopRestaurants({ signal, ...requestOptions });
+  > = ({ signal }) => getTopRestaurants(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getTopRestaurants>>,
@@ -346,21 +367,24 @@ export type GetTopRestaurantsQueryResult = NonNullable<
 export type GetTopRestaurantsQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get top 10 restaurants by average nom score
+ * @summary Get top 10 restaurants
  */
 
 export function useGetTopRestaurants<
   TData = Awaited<ReturnType<typeof getTopRestaurants>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getTopRestaurants>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetTopRestaurantsQueryOptions(options);
+>(
+  params?: GetTopRestaurantsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTopRestaurants>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTopRestaurantsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -728,6 +752,81 @@ export const useCreateNom = <
 > => {
   return useMutation(getCreateNomMutationOptions(options));
 };
+
+/**
+ * @summary Get Kashif's highest-scoring nom with restaurant info
+ */
+export const getGetKashifFeaturedUrl = () => {
+  return `/api/noms/kashif/featured`;
+};
+
+export const getKashifFeatured = async (
+  options?: RequestInit,
+): Promise<FeaturedNom> => {
+  return customFetch<FeaturedNom>(getGetKashifFeaturedUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetKashifFeaturedQueryKey = () => {
+  return [`/api/noms/kashif/featured`] as const;
+};
+
+export const getGetKashifFeaturedQueryOptions = <
+  TData = Awaited<ReturnType<typeof getKashifFeatured>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getKashifFeatured>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetKashifFeaturedQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getKashifFeatured>>
+  > = ({ signal }) => getKashifFeatured({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getKashifFeatured>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetKashifFeaturedQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getKashifFeatured>>
+>;
+export type GetKashifFeaturedQueryError = ErrorType<void>;
+
+/**
+ * @summary Get Kashif's highest-scoring nom with restaurant info
+ */
+
+export function useGetKashifFeatured<
+  TData = Awaited<ReturnType<typeof getKashifFeatured>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getKashifFeatured>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetKashifFeaturedQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get user profile

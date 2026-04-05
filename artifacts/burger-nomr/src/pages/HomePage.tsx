@@ -1,208 +1,289 @@
-import { Link } from "wouter";
-import { ChevronRight, Flame, PlusCircle } from "lucide-react";
-import { useGetRecentRestaurants, useGetSummaryStats } from "@workspace/api-client-react";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { useGetRecentRestaurants, useGetKashifFeatured } from "@workspace/api-client-react";
 import { RestaurantCard } from "@/components/RestaurantCard";
-import { useAuth } from "@/lib/auth";
+import { PlusCircle, ChevronRight } from "lucide-react";
 
-function EmptyHome() {
+const AREAS = [
+  "All",
+  "City Bowl",
+  "Atlantic Seaboard",
+  "Southern Suburbs",
+  "Northern Suburbs",
+  "V&A Waterfront",
+  "Observatory",
+];
+
+function scoreColor(score: number): string {
+  if (score >= 8.5) return "#E8420A";
+  if (score >= 7) return "#F07040";
+  return "#7A6A58";
+}
+
+function KashifHero() {
+  const [, navigate] = useLocation();
+  const { data: featured, isLoading } = useGetKashifFeatured({ query: { queryKey: ["kashifFeatured"] } });
+
+  if (isLoading) {
+    return (
+      <div style={{ margin: "0 0 0", height: 220, background: "#1A1208", borderRadius: 0 }} />
+    );
+  }
+
+  if (!featured) return null;
+
+  const { nom, restaurant } = featured;
+
   return (
-    <div style={{ textAlign: "center", padding: "48px 24px" }}>
+    <div
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        background: "#1A1208",
+        cursor: "pointer",
+      }}
+      onClick={() => navigate(`/restaurant/${restaurant.id}`)}
+    >
+      {/* Background image */}
+      {restaurant.image_url && (
+        <img
+          src={restaurant.image_url}
+          alt={restaurant.name}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.22,
+          }}
+        />
+      )}
+
+      {/* Gradient overlay */}
       <div
         style={{
-          width: 80,
-          height: 80,
-          background: "#F0E8DC",
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          margin: "0 auto 16px",
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(160deg, rgba(26,18,8,0.95) 40%, rgba(232,66,10,0.2) 100%)",
         }}
-      >
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <rect x="6" y="18" width="28" height="14" rx="3" fill="#D4C8BC"/>
-          <rect x="4" y="14" width="32" height="5" rx="2.5" fill="#C4B8AC"/>
-          <ellipse cx="20" cy="14" rx="12" ry="6" fill="#D4C8BC"/>
-          <rect x="12" y="30" width="16" height="3" rx="1.5" fill="#C4B8AC"/>
-        </svg>
-      </div>
-      <h3 style={{ fontFamily: "var(--app-font-display)", fontSize: "1.5rem", color: "#1A1208", marginBottom: 8 }}>
-        NO BURGERS YET
-      </h3>
-      <p style={{ color: "#7A6A58", fontSize: "0.9rem", lineHeight: 1.5, marginBottom: 20 }}>
-        Be the first to add a halaal burger spot to Cape Town's guide.
-      </p>
-      <Link href="/submit">
-        <button
+      />
+
+      <div style={{ position: "relative", zIndex: 1, padding: "52px 20px 28px" }}>
+        {/* Label */}
+        <div
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
             background: "#E8420A",
             color: "white",
-            border: "none",
-            borderRadius: 12,
-            padding: "12px 24px",
-            fontFamily: "var(--app-font-display)",
-            fontSize: "1rem",
-            letterSpacing: "0.05em",
-            cursor: "pointer",
+            fontSize: "0.65rem",
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            padding: "4px 10px",
+            borderRadius: 99,
+            marginBottom: 16,
           }}
         >
-          ADD A SPOT
-        </button>
-      </Link>
+          KASHIF'S TOP PICK
+        </div>
+
+        {/* Score + name row */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <h1
+              style={{
+                fontFamily: "var(--app-font-display)",
+                fontSize: "2.2rem",
+                color: "white",
+                margin: "0 0 4px",
+                letterSpacing: "0.04em",
+                lineHeight: 1.05,
+              }}
+            >
+              {restaurant.name}
+            </h1>
+            <p style={{ color: "#7A6A58", fontSize: "0.82rem", margin: "0 0 10px" }}>
+              {restaurant.area}
+            </p>
+            {nom.burger_ordered && (
+              <p style={{ color: "#D4C8BC", fontSize: "0.8rem", margin: "0 0 12px", fontStyle: "italic" }}>
+                Kashif ordered: <span style={{ color: "white", fontStyle: "normal" }}>{nom.burger_ordered}</span>
+              </p>
+            )}
+            {nom.comment && (
+              <p
+                style={{
+                  color: "#D4C8BC",
+                  fontSize: "0.85rem",
+                  lineHeight: 1.5,
+                  margin: 0,
+                  fontStyle: "italic",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                "{nom.comment}"
+              </p>
+            )}
+          </div>
+
+          {/* Score bubble */}
+          <div style={{ textAlign: "center", flexShrink: 0 }}>
+            <div
+              style={{
+                fontFamily: "var(--app-font-display)",
+                fontSize: "4rem",
+                color: scoreColor(nom.score),
+                letterSpacing: "0.02em",
+                lineHeight: 1,
+              }}
+            >
+              {nom.score.toFixed(1)}
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "#7A6A58", fontWeight: 600, letterSpacing: "0.08em" }}>
+              /10
+            </div>
+          </div>
+        </div>
+
+        {/* See restaurant link */}
+        <div
+          style={{
+            marginTop: 16,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            color: "#E8420A",
+            fontSize: "0.82rem",
+            fontWeight: 600,
+          }}
+        >
+          See restaurant <ChevronRight size={14} />
+        </div>
+      </div>
     </div>
   );
 }
 
 export default function HomePage() {
-  const { user } = useAuth();
-  const { data: recent, isLoading } = useGetRecentRestaurants({ limit: 6 });
-  const { data: stats } = useGetSummaryStats();
+  const [selectedArea, setSelectedArea] = useState("All");
 
-  const displayName = user?.user_metadata?.name ?? user?.email?.split("@")[0] ?? "Nomr";
+  const { data: recent, isLoading } = useGetRecentRestaurants({
+    limit: 20,
+    area: selectedArea !== "All" ? selectedArea : undefined,
+  });
 
   return (
     <div className="page-content">
-      {/* Header */}
+      {/* Kashif Hero */}
+      <KashifHero />
+
+      {/* Area Filter Tabs */}
       <div
         style={{
-          padding: "52px 20px 24px",
-          background: "linear-gradient(180deg, #1A1208 0%, #2C1E0C 100%)",
-          position: "relative",
-          overflow: "hidden",
+          overflowX: "auto",
+          padding: "16px 20px 12px",
+          background: "#FDF6EE",
+          borderBottom: "1px solid #F0E8DC",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: -20,
-            right: -20,
-            width: 200,
-            height: 200,
-            background: "radial-gradient(circle, rgba(232,66,10,0.3) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-        <p style={{ color: "#7A6A58", fontSize: "0.85rem", margin: 0, fontWeight: 500 }}>
-          Salaam, {displayName}
-        </p>
-        <h1
-          style={{
-            fontFamily: "var(--app-font-display)",
-            fontSize: "2.8rem",
-            color: "white",
-            margin: "4px 0 16px",
-            letterSpacing: "0.04em",
-            lineHeight: 1,
-          }}
-        >
-          WHAT'S YOUR NEXT<br />
-          <span style={{ color: "#E8420A" }}>NOM?</span>
-        </h1>
-
-        {/* Stats Row */}
-        {stats && (
-          <div style={{ display: "flex", gap: 16 }}>
-            {[
-              { label: "Spots", value: stats.total_restaurants },
-              { label: "Noms", value: stats.total_noms },
-              { label: "Top Area", value: stats.top_area ?? "—" },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <div style={{ fontFamily: "var(--app-font-display)", fontSize: "1.5rem", color: "white", letterSpacing: "0.04em" }}>
-                  {value}
-                </div>
-                <div style={{ fontSize: "0.7rem", color: "#7A6A58", fontWeight: 500 }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        )}
+        <div style={{ display: "flex", gap: 8, width: "max-content" }}>
+          {AREAS.map((area) => (
+            <button
+              key={area}
+              onClick={() => setSelectedArea(area)}
+              style={{
+                padding: "7px 16px",
+                borderRadius: 99,
+                border: "1.5px solid",
+                borderColor: selectedArea === area ? "#E8420A" : "#E8DDD0",
+                background: selectedArea === area ? "#E8420A" : "transparent",
+                color: selectedArea === area ? "white" : "#7A6A58",
+                fontFamily: "var(--app-font-sans)",
+                fontSize: "0.82rem",
+                fontWeight: 500,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.15s",
+              }}
+            >
+              {area}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div style={{ padding: "0 20px" }}>
-        {/* Quick Actions */}
-        <div style={{ display: "flex", gap: 12, marginTop: 20, marginBottom: 28 }}>
-          <Link href="/top10" style={{ flex: 1 }}>
-            <div
-              style={{
-                background: "#E8420A",
-                color: "white",
-                borderRadius: 14,
-                padding: "16px 14px",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                cursor: "pointer",
-              }}
-            >
-              <Flame size={20} />
-              <div>
-                <div style={{ fontFamily: "var(--app-font-display)", fontSize: "1.1rem", letterSpacing: "0.04em" }}>TOP 10</div>
-                <div style={{ fontSize: "0.72rem", opacity: 0.8 }}>Best nominated spots</div>
-              </div>
-            </div>
-          </Link>
-          <Link href="/submit" style={{ flex: 1 }}>
-            <div
-              style={{
-                background: "#F0E8DC",
-                color: "#1A1208",
-                borderRadius: 14,
-                padding: "16px 14px",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                cursor: "pointer",
-              }}
-            >
-              <PlusCircle size={20} color="#E8420A" />
-              <div>
-                <div style={{ fontFamily: "var(--app-font-display)", fontSize: "1.1rem", letterSpacing: "0.04em" }}>ADD SPOT</div>
-                <div style={{ fontSize: "0.72rem", color: "#7A6A58" }}>Know a place?</div>
-              </div>
-            </div>
-          </Link>
-        </div>
-
-        {/* Recent Restaurants */}
+      <div style={{ padding: "16px 20px" }}>
+        {/* Section header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <h2 style={{ fontFamily: "var(--app-font-display)", fontSize: "1.5rem", margin: 0, letterSpacing: "0.04em" }}>
-            RECENTLY ADDED
+          <h2 style={{ fontFamily: "var(--app-font-display)", fontSize: "1.4rem", margin: 0, letterSpacing: "0.04em" }}>
+            {selectedArea === "All" ? "RECENTLY ADDED" : selectedArea.toUpperCase()}
           </h2>
-          <Link href="/explore">
-            <button
-              style={{
-                background: "none",
-                border: "none",
-                color: "#E8420A",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              See all <ChevronRight size={14} />
-            </button>
-          </Link>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link href="/submit">
+              <button
+                style={{
+                  background: "none",
+                  border: "1.5px solid #E8DDD0",
+                  borderRadius: 10,
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  color: "#7A6A58",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                }}
+              >
+                <PlusCircle size={14} color="#E8420A" />
+                Add spot
+              </button>
+            </Link>
+          </div>
         </div>
 
         {isLoading && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                style={{
-                  height: 220,
-                  background: "#F0E8DC",
-                  borderRadius: 16,
-                }}
-              />
+            {[1, 2, 3].map((i) => (
+              <div key={i} style={{ height: 220, background: "#F0E8DC", borderRadius: 16 }} />
             ))}
           </div>
         )}
 
-        {!isLoading && (!recent || recent.length === 0) && <EmptyHome />}
+        {!isLoading && (!recent || recent.length === 0) && (
+          <div style={{ textAlign: "center", padding: "48px 24px" }}>
+            <h3 style={{ fontFamily: "var(--app-font-display)", fontSize: "1.4rem", color: "#1A1208", marginBottom: 8 }}>
+              NO SPOTS HERE YET
+            </h3>
+            <p style={{ color: "#7A6A58", fontSize: "0.9rem", lineHeight: 1.5, marginBottom: 20 }}>
+              {selectedArea !== "All"
+                ? `No halaal burger spots in ${selectedArea} yet.`
+                : "Be the first to add a halaal burger spot."}
+            </p>
+            <Link href="/submit">
+              <button
+                style={{
+                  background: "#E8420A",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "12px 24px",
+                  fontFamily: "var(--app-font-display)",
+                  fontSize: "1rem",
+                  letterSpacing: "0.05em",
+                  cursor: "pointer",
+                }}
+              >
+                ADD A SPOT
+              </button>
+            </Link>
+          </div>
+        )}
 
         {!isLoading && recent && recent.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

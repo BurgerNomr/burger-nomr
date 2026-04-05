@@ -5,10 +5,10 @@
  * Burger Nomr - Halaal burger nom platform for Cape Town
  * OpenAPI spec version: 0.3.0
  */
+import type { Nom } from "./nom";
+import type { Restaurant } from "./restaurant";
 
-export interface SummaryStats {
-  total_restaurants: number;
-  total_noms: number;
-  top_area?: string | null;
-  avg_score_platform?: number | null;
+export interface FeaturedNom {
+  nom: Nom;
+  restaurant: Restaurant;
 }

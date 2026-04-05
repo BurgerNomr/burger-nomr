@@ -6,7 +6,7 @@ import {
   ListRestaurantsQueryParams,
   GetRecentRestaurantsQueryParams,
 } from "@workspace/api-zod";
-import { eq, desc, ilike, avg, count, and } from "drizzle-orm";
+import { eq, desc, ilike, avg, count, and, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -19,21 +19,26 @@ function formatRestaurant(r: {
   image_url: string | null;
   price_range: string | null;
   tags: string[];
+  certifications: string[];
   latitude: string | null;
   longitude: string | null;
   created_at: Date;
   avg_score: string | null;
+  kashif_score: string | null;
   total_noms: string | bigint;
 }) {
   return {
     ...r,
     avg_score: r.avg_score ? Number(r.avg_score) : null,
+    kashif_score: r.kashif_score ? Number(r.kashif_score) : null,
     total_noms: Number(r.total_noms),
     latitude: r.latitude ? Number(r.latitude) : null,
     longitude: r.longitude ? Number(r.longitude) : null,
     created_at: r.created_at.toISOString(),
   };
 }
+
+const kashifScoreExpr = sql<string | null>`(SELECT AVG(kn.score) FROM reviews kn WHERE kn.restaurant_id = ${restaurantsTable.id} AND kn.user_name = 'Kashif')`;
 
 router.get("/restaurants", async (req, res): Promise<void> => {
   const parsed = ListRestaurantsQueryParams.safeParse(req.query);
@@ -53,10 +58,12 @@ router.get("/restaurants", async (req, res): Promise<void> => {
       image_url: restaurantsTable.image_url,
       price_range: restaurantsTable.price_range,
       tags: restaurantsTable.tags,
+      certifications: restaurantsTable.certifications,
       latitude: restaurantsTable.latitude,
       longitude: restaurantsTable.longitude,
       created_at: restaurantsTable.created_at,
       avg_score: avg(reviewsTable.score),
+      kashif_score: kashifScoreExpr,
       total_noms: count(reviewsTable.id),
     })
     .from(restaurantsTable)
@@ -70,7 +77,40 @@ router.get("/restaurants", async (req, res): Promise<void> => {
   res.json(rows.map(formatRestaurant));
 });
 
-router.get("/restaurants/top", async (_req, res): Promise<void> => {
+router.get("/restaurants/top", async (req, res): Promise<void> => {
+  const mode = (req.query.mode as string) ?? "community";
+
+  if (mode === "kashif") {
+    const result = await db.execute(sql`
+      SELECT
+        r.id, r.name, r.area, r.address, r.description, r.image_url,
+        r.price_range, r.tags, r.certifications, r.latitude, r.longitude, r.created_at,
+        AVG(n.score) FILTER (WHERE n.user_name != 'Kashif') AS avg_score,
+        AVG(n.score) FILTER (WHERE n.user_name = 'Kashif') AS kashif_score,
+        COUNT(n.id) AS total_noms
+      FROM restaurants r
+      JOIN reviews n ON n.restaurant_id = r.id AND n.user_name = 'Kashif'
+      GROUP BY r.id
+      ORDER BY kashif_score DESC
+      LIMIT 10
+    `);
+
+    res.json(
+      result.rows.map((r: Record<string, unknown>, i: number) => ({
+        ...r,
+        avg_score: r.avg_score ? Number(r.avg_score) : null,
+        kashif_score: r.kashif_score ? Number(r.kashif_score) : null,
+        total_noms: Number(r.total_noms),
+        latitude: r.latitude ? Number(r.latitude) : null,
+        longitude: r.longitude ? Number(r.longitude) : null,
+        created_at: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+        rank: i + 1,
+      }))
+    );
+    return;
+  }
+
+  // Community mode
   const rows = await db
     .select({
       id: restaurantsTable.id,
@@ -81,10 +121,12 @@ router.get("/restaurants/top", async (_req, res): Promise<void> => {
       image_url: restaurantsTable.image_url,
       price_range: restaurantsTable.price_range,
       tags: restaurantsTable.tags,
+      certifications: restaurantsTable.certifications,
       latitude: restaurantsTable.latitude,
       longitude: restaurantsTable.longitude,
       created_at: restaurantsTable.created_at,
       avg_score: avg(reviewsTable.score),
+      kashif_score: kashifScoreExpr,
       total_noms: count(reviewsTable.id),
     })
     .from(restaurantsTable)
@@ -99,6 +141,9 @@ router.get("/restaurants/top", async (_req, res): Promise<void> => {
 router.get("/restaurants/recent", async (req, res): Promise<void> => {
   const parsed = GetRecentRestaurantsQueryParams.safeParse(req.query);
   const limit = parsed.success ? (parsed.data.limit ?? 6) : 6;
+  const area = req.query.area as string | undefined;
+
+  const conditions = area ? [ilike(restaurantsTable.area, `%${area}%`)] : [];
 
   const rows = await db
     .select({
@@ -110,14 +155,17 @@ router.get("/restaurants/recent", async (req, res): Promise<void> => {
       image_url: restaurantsTable.image_url,
       price_range: restaurantsTable.price_range,
       tags: restaurantsTable.tags,
+      certifications: restaurantsTable.certifications,
       latitude: restaurantsTable.latitude,
       longitude: restaurantsTable.longitude,
       created_at: restaurantsTable.created_at,
       avg_score: avg(reviewsTable.score),
+      kashif_score: kashifScoreExpr,
       total_noms: count(reviewsTable.id),
     })
     .from(restaurantsTable)
     .leftJoin(reviewsTable, eq(restaurantsTable.id, reviewsTable.restaurant_id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .groupBy(restaurantsTable.id)
     .orderBy(desc(restaurantsTable.created_at))
     .limit(limit);
@@ -143,10 +191,12 @@ router.get("/restaurants/:id", async (req, res): Promise<void> => {
       image_url: restaurantsTable.image_url,
       price_range: restaurantsTable.price_range,
       tags: restaurantsTable.tags,
+      certifications: restaurantsTable.certifications,
       latitude: restaurantsTable.latitude,
       longitude: restaurantsTable.longitude,
       created_at: restaurantsTable.created_at,
       avg_score: avg(reviewsTable.score),
+      kashif_score: kashifScoreExpr,
       total_noms: count(reviewsTable.id),
     })
     .from(restaurantsTable)
@@ -202,12 +252,17 @@ router.post("/restaurants", async (req, res): Promise<void> => {
 
   const [restaurant] = await db
     .insert(restaurantsTable)
-    .values({ ...parsed.data, tags: parsed.data.tags ?? [] })
+    .values({
+      ...parsed.data,
+      tags: parsed.data.tags ?? [],
+      certifications: (parsed.data as { certifications?: string[] }).certifications ?? [],
+    })
     .returning();
 
   res.status(201).json({
     ...restaurant,
     avg_score: null,
+    kashif_score: null,
     total_noms: 0,
     latitude: restaurant.latitude ? Number(restaurant.latitude) : null,
     longitude: restaurant.longitude ? Number(restaurant.longitude) : null,

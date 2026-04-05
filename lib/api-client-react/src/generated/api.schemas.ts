@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Burger Nomr - Halaal burger nom platform for Cape Town
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 export interface HealthStatus {
   status: string;
@@ -17,9 +17,11 @@ export interface Restaurant {
   description: string;
   image_url?: string | null;
   avg_score?: number | null;
+  kashif_score?: number | null;
   total_noms: number;
   price_range?: string | null;
   tags: string[];
+  certifications: string[];
   latitude?: number | null;
   longitude?: number | null;
   created_at: string;
@@ -32,6 +34,7 @@ export interface Nom {
   user_name: string;
   user_avatar?: string | null;
   score: number;
+  burger_ordered?: string | null;
   comment?: string | null;
   created_at: string;
 }
@@ -43,6 +46,11 @@ export type RestaurantDetail = Restaurant & {
 export type RestaurantWithRank = Restaurant & {
   rank: number;
 };
+
+export interface FeaturedNom {
+  nom: Nom;
+  restaurant: Restaurant;
+}
 
 export interface UserProfile {
   id: string;
@@ -68,6 +76,7 @@ export interface CreateRestaurantBody {
   image_url?: string | null;
   price_range?: string | null;
   tags: string[];
+  certifications?: string[];
   latitude?: number | null;
   longitude?: number | null;
 }
@@ -78,7 +87,20 @@ export interface CreateNomBody {
   user_name: string;
   user_avatar?: string | null;
   score: number;
+  burger_ordered?: string | null;
   comment?: string | null;
+}
+
+export type GetTopRestaurantsParamsMode =
+  (typeof GetTopRestaurantsParamsMode)[keyof typeof GetTopRestaurantsParamsMode];
+
+export const GetTopRestaurantsParamsMode = {
+  kashif: "kashif",
+  community: "community",
+} as const;
+
+export interface GetTopRestaurantsParams {
+  mode?: GetTopRestaurantsParamsMode;
 }
 
 export type ListRestaurantsParams = {
@@ -88,6 +110,19 @@ export type ListRestaurantsParams = {
   offset?: number;
 };
 
+export type GetTopRestaurantsParams = {
+  mode?: GetTopRestaurantsMode;
+};
+
+export type GetTopRestaurantsMode =
+  (typeof GetTopRestaurantsMode)[keyof typeof GetTopRestaurantsMode];
+
+export const GetTopRestaurantsMode = {
+  kashif: "kashif",
+  community: "community",
+} as const;
+
 export type GetRecentRestaurantsParams = {
   limit?: number;
+  area?: string;
 };

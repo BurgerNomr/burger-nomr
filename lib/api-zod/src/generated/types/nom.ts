@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Burger Nomr - Halaal burger nom platform for Cape Town
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export interface Nom {
@@ -13,6 +13,7 @@ export interface Nom {
   user_name: string;
   user_avatar?: string | null;
   score: number;
+  burger_ordered?: string | null;
   comment?: string | null;
   created_at: string;
 }

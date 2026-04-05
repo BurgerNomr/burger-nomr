@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Burger Nomr - Halaal burger nom platform for Cape Town
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import * as zod from "zod";
 
@@ -35,9 +35,11 @@ export const ListRestaurantsResponseItem = zod.object({
   description: zod.string(),
   image_url: zod.string().nullish(),
   avg_score: zod.number().nullish(),
+  kashif_score: zod.number().nullish(),
   total_noms: zod.number(),
   price_range: zod.string().nullish(),
   tags: zod.array(zod.string()),
+  certifications: zod.array(zod.string()),
   latitude: zod.number().nullish(),
   longitude: zod.number().nullish(),
   created_at: zod.string(),
@@ -55,13 +57,22 @@ export const CreateRestaurantBody = zod.object({
   image_url: zod.string().nullish(),
   price_range: zod.string().nullish(),
   tags: zod.array(zod.string()),
+  certifications: zod.array(zod.string()).optional(),
   latitude: zod.number().nullish(),
   longitude: zod.number().nullish(),
 });
 
 /**
- * @summary Get top 10 restaurants by average nom score
+ * @summary Get top 10 restaurants
  */
+export const getTopRestaurantsQueryModeDefault = `community`;
+
+export const GetTopRestaurantsQueryParams = zod.object({
+  mode: zod
+    .enum(["kashif", "community"])
+    .default(getTopRestaurantsQueryModeDefault),
+});
+
 export const GetTopRestaurantsResponseItem = zod
   .object({
     id: zod.string(),
@@ -71,9 +82,11 @@ export const GetTopRestaurantsResponseItem = zod
     description: zod.string(),
     image_url: zod.string().nullish(),
     avg_score: zod.number().nullish(),
+    kashif_score: zod.number().nullish(),
     total_noms: zod.number(),
     price_range: zod.string().nullish(),
     tags: zod.array(zod.string()),
+    certifications: zod.array(zod.string()),
     latitude: zod.number().nullish(),
     longitude: zod.number().nullish(),
     created_at: zod.string(),
@@ -94,6 +107,7 @@ export const getRecentRestaurantsQueryLimitDefault = 6;
 
 export const GetRecentRestaurantsQueryParams = zod.object({
   limit: zod.coerce.number().default(getRecentRestaurantsQueryLimitDefault),
+  area: zod.coerce.string().optional(),
 });
 
 export const GetRecentRestaurantsResponseItem = zod.object({
@@ -104,9 +118,11 @@ export const GetRecentRestaurantsResponseItem = zod.object({
   description: zod.string(),
   image_url: zod.string().nullish(),
   avg_score: zod.number().nullish(),
+  kashif_score: zod.number().nullish(),
   total_noms: zod.number(),
   price_range: zod.string().nullish(),
   tags: zod.array(zod.string()),
+  certifications: zod.array(zod.string()),
   latitude: zod.number().nullish(),
   longitude: zod.number().nullish(),
   created_at: zod.string(),
@@ -131,9 +147,11 @@ export const GetRestaurantResponse = zod
     description: zod.string(),
     image_url: zod.string().nullish(),
     avg_score: zod.number().nullish(),
+    kashif_score: zod.number().nullish(),
     total_noms: zod.number(),
     price_range: zod.string().nullish(),
     tags: zod.array(zod.string()),
+    certifications: zod.array(zod.string()),
     latitude: zod.number().nullish(),
     longitude: zod.number().nullish(),
     created_at: zod.string(),
@@ -149,6 +167,7 @@ export const GetRestaurantResponse = zod
             user_name: zod.string(),
             user_avatar: zod.string().nullish(),
             score: zod.number(),
+            burger_ordered: zod.string().nullish(),
             comment: zod.string().nullish(),
             created_at: zod.string(),
           }),
@@ -171,6 +190,7 @@ export const GetRestaurantNomsResponseItem = zod.object({
   user_name: zod.string(),
   user_avatar: zod.string().nullish(),
   score: zod.number(),
+  burger_ordered: zod.string().nullish(),
   comment: zod.string().nullish(),
   created_at: zod.string(),
 });
@@ -187,7 +207,42 @@ export const CreateNomBody = zod.object({
   user_name: zod.string(),
   user_avatar: zod.string().nullish(),
   score: zod.number(),
+  burger_ordered: zod.string().nullish(),
   comment: zod.string().nullish(),
+});
+
+/**
+ * @summary Get Kashif's highest-scoring nom with restaurant info
+ */
+export const GetKashifFeaturedResponse = zod.object({
+  nom: zod.object({
+    id: zod.string(),
+    restaurant_id: zod.string(),
+    user_id: zod.string(),
+    user_name: zod.string(),
+    user_avatar: zod.string().nullish(),
+    score: zod.number(),
+    burger_ordered: zod.string().nullish(),
+    comment: zod.string().nullish(),
+    created_at: zod.string(),
+  }),
+  restaurant: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    area: zod.string(),
+    address: zod.string(),
+    description: zod.string(),
+    image_url: zod.string().nullish(),
+    avg_score: zod.number().nullish(),
+    kashif_score: zod.number().nullish(),
+    total_noms: zod.number(),
+    price_range: zod.string().nullish(),
+    tags: zod.array(zod.string()),
+    certifications: zod.array(zod.string()),
+    latitude: zod.number().nullish(),
+    longitude: zod.number().nullish(),
+    created_at: zod.string(),
+  }),
 });
 
 /**
@@ -220,6 +275,7 @@ export const GetUserNomsResponseItem = zod.object({
   user_name: zod.string(),
   user_avatar: zod.string().nullish(),
   score: zod.number(),
+  burger_ordered: zod.string().nullish(),
   comment: zod.string().nullish(),
   created_at: zod.string(),
 });

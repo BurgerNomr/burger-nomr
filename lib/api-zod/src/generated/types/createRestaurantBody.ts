@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Burger Nomr - Halaal burger nom platform for Cape Town
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export interface CreateRestaurantBody {
@@ -14,6 +14,7 @@ export interface CreateRestaurantBody {
   image_url?: string | null;
   price_range?: string | null;
   tags: string[];
+  certifications?: string[];
   latitude?: number | null;
   longitude?: number | null;
 }

@@ -9,6 +9,7 @@ export const reviewsTable = pgTable("reviews", {
   user_name: text("user_name").notNull(),
   user_avatar: text("user_avatar"),
   score: numeric("score", { precision: 4, scale: 1 }).notNull(),
+  burger_ordered: text("burger_ordered"),
   comment: text("comment"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
