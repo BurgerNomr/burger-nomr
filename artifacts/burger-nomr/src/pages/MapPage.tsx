@@ -2,19 +2,15 @@ import { useListRestaurants } from "@workspace/api-client-react";
 import { MapPin } from "lucide-react";
 import { Link } from "wouter";
 
-const AREA_COORDS: Record<string, { lat: number; lng: number; color: string }> = {
-  "Bo-Kaap": { lat: -33.9197, lng: 18.4130, color: "#E8420A" },
-  "Sea Point": { lat: -33.9116, lng: 18.3975, color: "#F07040" },
-  "CBD": { lat: -33.9249, lng: 18.4241, color: "#1A1208" },
-  "Claremont": { lat: -33.9843, lng: 18.4661, color: "#7A6A58" },
-  "Wynberg": { lat: -34.0032, lng: 18.4631, color: "#E8420A" },
-  "Athlone": { lat: -33.9768, lng: 18.5025, color: "#F07040" },
-  "Mitchells Plain": { lat: -34.0525, lng: 18.6228, color: "#1A1208" },
-  "Bellville": { lat: -33.8975, lng: 18.6299, color: "#7A6A58" },
-  "Woodstock": { lat: -33.9298, lng: 18.4415, color: "#E8420A" },
-  "Observatory": { lat: -33.9423, lng: 18.4666, color: "#F07040" },
-  "Salt River": { lat: -33.9310, lng: 18.4583, color: "#1A1208" },
-  "Green Point": { lat: -33.9002, lng: 18.4042, color: "#7A6A58" },
+const AREA_COORDS: Record<string, { color: string }> = {
+  "City Bowl": { color: "#E8420A" },
+  "Atlantic Seaboard": { color: "#F07040" },
+  "Southern Suburbs": { color: "#7A6A58" },
+  "Northern Suburbs": { color: "#1A1208" },
+  "V&A Waterfront": { color: "#E8420A" },
+  "Observatory": { color: "#F07040" },
+  "Gardens": { color: "#7A6A58" },
+  "Other Cape Town": { color: "#D4C8BC" },
 };
 
 export default function MapPage() {
@@ -51,7 +47,7 @@ export default function MapPage() {
             padding: 20,
             position: "relative",
             overflow: "hidden",
-            minHeight: 240,
+            minHeight: 220,
           }}
         >
           {/* Grid background */}
@@ -179,7 +175,7 @@ export default function MapPage() {
                           <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#1A1208" }}>{spot.name}</div>
                           <div style={{ fontSize: "0.75rem", color: "#7A6A58" }}>{spot.address}</div>
                         </div>
-                        {spot.avg_rating != null && (
+                        {spot.avg_score != null && (
                           <span
                             style={{
                               background: "#E8420A",
@@ -191,7 +187,7 @@ export default function MapPage() {
                               letterSpacing: "0.04em",
                             }}
                           >
-                            {(spot.avg_rating as number).toFixed(1)}
+                            {(spot.avg_score as number).toFixed(1)}
                           </span>
                         )}
                       </div>
