@@ -139,7 +139,7 @@ export default function HomePage() {
         {!isLoading && recent.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {recent.map((r) => (
-              <RestaurantCard key={r.id} id={r.id} name={r.name} area={r.areas?.name} image_url={r.image_url} avg_score={r.community_score} total_noms={r.total_noms} tags={[]} price_range={r.price_range} />
+              <RestaurantCard key={r.id} id={r.id} name={r.name} area={(r.areas as any)?.name ?? ""} image_url={r.image_url} avg_score={r.community_score} total_noms={r.total_noms} tags={[]} price_range={r.price_range} />
             ))}
           </div>
         )}
