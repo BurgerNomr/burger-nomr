@@ -47,9 +47,8 @@ export default function ExplorePage() {
         .limit(50);
 
       if (selectedArea !== "All Areas") {
-        const { data: areaData } = await supabase.from("areas").select("id").eq("name", selectedArea).single();
-        if (areaData) query = query.eq("area_id", areaData.id);
-      }
+  query = query.eq("areas.name", selectedArea);
+}
 
       if (search) {
         query = query.ilike("name", `%${search}%`);
