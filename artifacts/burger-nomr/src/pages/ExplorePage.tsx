@@ -36,26 +36,49 @@ export default function ExplorePage() {
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+useEffect(() => {
     async function load() {
       setIsLoading(true);
-      let query = supabase
-        .from("restaurants")
-        .select("*, areas(name)")
-        .eq("is_published", true)
-        .order("name", { ascending: true })
-        .limit(50);
 
       if (selectedArea !== "All Areas") {
-  query = query.eq("areas.name", selectedArea);
-}
+        const { data: areaData } = await supabase
+          .from("areas")
+          .select("id")
+          .eq("name", selectedArea)
+          .single();
 
-      if (search) {
-        query = query.ilike("name", `%${search}%`);
+        if (!areaData) {
+          setRestaurants([]);
+          setIsLoading(false);
+          return;
+        }
+
+        let query = supabase
+          .from("restaurants")
+          .select("*, areas(name)")
+          .eq("is_published", true)
+          .eq("area_id", areaData.id)
+          .order("name", { ascending: true })
+          .limit(50);
+
+        if (search) query = query.ilike("name", `%${search}%`);
+
+        const { data } = await query;
+        setRestaurants(data || []);
+      } else {
+        let query = supabase
+          .from("restaurants")
+          .select("*, areas(name)")
+          .eq("is_published", true)
+          .order("name", { ascending: true })
+          .limit(50);
+
+        if (search) query = query.ilike("name", `%${search}%`);
+
+        const { data } = await query;
+        setRestaurants(data || []);
       }
 
-      const { data } = await query;
-      setRestaurants(data || []);
       setIsLoading(false);
     }
     load();
